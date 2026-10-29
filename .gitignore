@@ -1,0 +1,9 @@
+/.bundle/
+/Gemfile.lock
+/pkg/
+/tmp/
+/test/dummy/log/
+/test/dummy/tmp/
+/node_modules/
+*.gem
+tmp/
