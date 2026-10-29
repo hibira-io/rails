@@ -44,6 +44,11 @@ hibira:
   secret: your-app-secret
 ```
 
+The secret is shown only once, when you create the app; the app ID and key
+stay under Overview → Credentials. On the Free plan, allowed origins can't be
+`*`: add every origin your pages load from (`http://localhost:3000` while
+developing, plus your production domain), or browsers are refused.
+
 Then check them:
 
 ```sh
