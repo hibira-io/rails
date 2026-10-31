@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- README: cover image and screenshots.
+
 ## 0.1.0
 
 - Turbo Streams over Hibira: every Turbo broadcast (`broadcasts_to`,
