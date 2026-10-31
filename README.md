@@ -1,5 +1,7 @@
 # hibira-rails
 
+![hibira-rails](.github/cover.jpg)
+
 [![ci](https://github.com/hibira-io/rails/actions/workflows/ci.yml/badge.svg)](https://github.com/hibira-io/rails/actions/workflows/ci.yml)
 
 Hotwire Turbo Streams over [Hibira](https://hibira.io), with no Action Cable
