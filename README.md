@@ -197,6 +197,40 @@ Hibira.push.publish_to_users(
 web, Android and iOS SDKs. It answers only for the signed-in user
 (`current_user` or `Current.user`; change it with `config.push_user_id`).
 
+## Waiting room
+
+Put a [Hibira waiting room](https://github.com/hibira-io/waiting-room) in front
+of a ticket drop or launch page. Visitors without a pass are sent to the hosted
+queue page; when it's their turn they come back with a signed pass, which is
+checked and kept in an HttpOnly cookie.
+
+```ruby
+class DropsController < ApplicationController
+  waiting_room "presale", only: :show
+
+  def show
+    @number = hibira_pass.number # also ticket_id, expires_at
+  end
+end
+```
+
+Or protect path prefixes in any Rack app:
+
+```ruby
+# config/application.rb
+config.middleware.use Hibira::WaitingRoom::Middleware, "/drop" => "presale"
+```
+
+Non-GET requests without a pass get a `403`. Create the room (rate, start
+time, `return_urls`) with the
+[waiting rooms API](https://github.com/hibira-io/pusher-server/blob/master/docs/waiting-rooms.md).
+A pass is valid for 30 minutes by default and works in any browser; if each
+queue number may check out once, record `hibira_pass.ticket_id` and refuse a
+repeat. `Hibira::WaitingRoom.verify_pass(token, room: "presale")` checks a pass
+anywhere else.
+
+中文摘要：在搶票或限量開賣的 controller 加上 `waiting_room "presale"`（或用 Rack middleware 保護路徑），沒有 pass 的訪客會被導到 Hibira 託管的排隊頁，輪到時帶著簽名 pass 回來並存成 HttpOnly cookie。
+
 ## Settings
 
 | Setting | Environment | Default |
