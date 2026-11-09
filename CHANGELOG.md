@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+- Waiting rooms: `waiting_room "presale", only: :show` in controllers and
+  `Hibira::WaitingRoom::Middleware` for path prefixes send visitors without a
+  pass to the Hibira queue and let them in with a signed pass kept in an
+  HttpOnly cookie (`hibira_pass` in the controller).
+  `Hibira::WaitingRoom.verify_pass` checks a pass anywhere.
+
 ## 0.1.1
 
 - README: cover image and screenshots.

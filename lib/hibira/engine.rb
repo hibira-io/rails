@@ -26,6 +26,9 @@ module Hibira
       ActiveSupport.on_load(:action_view) do
         include Hibira::StreamsHelper
       end
+      ActiveSupport.on_load(:action_controller) do
+        include Hibira::WaitingRoom::Controller
+      end
     end
 
     # The Hibira routes are drawn straight into the app's routes (like Active
