@@ -3,6 +3,7 @@
 require "test_helper"
 
 class DropsController < ActionController::Base
+  protect_from_forgery with: :exception
   waiting_room "presale", only: :show
 
   def show = render(plain: "in ##{hibira_pass.number}")
@@ -81,7 +82,8 @@ class WaitingRoomTest < ActionDispatch::IntegrationTest
 
     post "/drops/1"
     assert_response :forbidden
-    assert_equal "waiting_room", response.parsed_body["error"]
+    assert_equal "waiting_room", JSON.parse(response.body)["error"]
+    assert_equal "application/json", response.media_type
   end
 
   test "turns ?hibira_pass into a cookie, then lets the visitor in" do

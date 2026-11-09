@@ -154,7 +154,13 @@ module Hibira
           before_action(**filter) do
             status, headers, body = WaitingRoom.check(request.env, room, **options)
             if status
-              headers.each { |k, v| response.set_header(k, v) }
+              headers.each do |k, v|
+                case k
+                when "content-type" then response.content_type = v
+                when "location" then response.location = v
+                else response.set_header(k, v)
+                end
+              end
               self.status = status
               self.response_body = body
             end
