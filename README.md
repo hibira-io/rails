@@ -252,6 +252,30 @@ pretend to be them. Options: `hibira_live_chat(color: "#0a7", lang: "ja", launch
 
 中文摘要：在 layout 加 `<%= hibira_live_chat %>` 就會放上 Hibira Live Chat 聊天視窗；設定 identity secret 後，已登入的使用者會以 HMAC 簽名的身分聊天，客服看得到姓名與 email，別人也無法冒充。
 
+## Approvals
+
+Ask a person for a decision from a controller, a job or an agent
+([Hibira Approvals](https://hibira.io/approvals)), then act on the answer:
+
+```ruby
+approval = Hibira.request_approval(
+  title: "Refund order #1042 for $89?",
+  details: "Customer says the parcel arrived damaged.",
+  options: %w[Refund Decline],          # the first option approves
+  channel: "private-ops",               # optional: an "approval" event on request and decision
+  expires_in_minutes: 120
+)
+# share approval["url"] with whoever decides, then
+approval = Hibira.wait_for_approval(approval["approval_id"], timeout: 600)
+refund! if approval["status"] == "approved"
+```
+
+`Hibira.approval(id, wait: 25)` reads one status, holding the request up to
+25 seconds until it is answered. API errors raise `Hibira::Approvals::Error`
+with `status` and the API's message.
+
+中文摘要：`Hibira.request_approval` 從 controller、背景工作或 AI agent 發出需要人決定的請求，把回傳的 `url` 分享給決策者，再用 `Hibira.wait_for_approval` 等待結果（approved、rejected 或 expired）。
+
 ## Settings
 
 | Setting | Environment | Default |

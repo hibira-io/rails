@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Approvals: `Hibira.request_approval(title:, ...)`, `Hibira.approval(id, wait:)` and `Hibira.wait_for_approval(id)` ask a person for a decision and read the answer.
 - Live Chat: `<%= hibira_live_chat %>` puts the Hibira Live Chat widget on the page; with `HIBIRA_LIVECHAT_IDENTITY_SECRET` the signed-in user is a verified visitor (`data-user-hash`). `Hibira::LiveChat.identity` and `.user_hash` for SPAs.
 
 ## 0.2.0
