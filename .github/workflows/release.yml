@@ -16,3 +16,7 @@ jobs:
           ruby-version: "3.4"
           bundler-cache: true
       - uses: rubygems/release-gem@7f9650160c1a4e7989fdc9855807bdbd421d8b6b # v1
+        with:
+          # The await step (rubygems-await 0.5.4) crashes on Ruby 3.4 after a
+          # successful push and fails the job; the gem is already published.
+          await-release: false
