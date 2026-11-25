@@ -54,6 +54,20 @@ class ApprovalsTest < ActiveSupport::TestCase
     assert signature_ok?(seen)
   end
 
+  test "reply_to_approval posts the reply" do
+    seen = nil
+    stub_request(:post, APPROVALS).to_return do |request|
+      seen = request
+      { status: 201, body: approval.to_json }
+    end
+
+    Hibira.reply_to_approval("apr_1", message: "Staging only", details: "DELETE ... LIMIT 12")
+    assert_equal "/apps/1/approvals/apr_1/replies", seen.uri.path
+    assert_equal({ "message" => "Staging only", "details" => "DELETE ... LIMIT 12" }, JSON.parse(seen.body))
+    assert signature_ok?(seen)
+    assert_raises(ArgumentError) { Hibira.reply_to_approval("apr_1", message: "") }
+  end
+
   test "wait_for_approval polls until answered" do
     stub_request(:get, APPROVALS)
       .to_return({ status: 200, body: approval.to_json }, { status: 200, body: approval("rejected").to_json })

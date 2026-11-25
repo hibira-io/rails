@@ -272,7 +272,10 @@ refund! if approval["status"] == "approved"
 
 `Hibira.approval(id, wait: 25)` reads one status, holding the request up to
 25 seconds until it is answered. API errors raise `Hibira::Approvals::Error`
-with `status` and the API's message.
+with `status` and the API's message. When an approver asks a question
+instead of deciding (`approval["awaiting_reply"]`), answer with
+`Hibira.reply_to_approval(id, message: "...")`. `approvers:`, `quorum:` and
+`callback_url:` are passed through for Approvals workspaces.
 
 中文摘要：`Hibira.request_approval` 從 controller、背景工作或 AI agent 發出需要人決定的請求，把回傳的 `url` 分享給決策者，再用 `Hibira.wait_for_approval` 等待結果（approved、rejected 或 expired）。
 

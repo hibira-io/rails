@@ -19,7 +19,8 @@ module Hibira
   #   refund! if approval["status"] == "approved"
   module Approvals
     MAX_WAIT = 25
-    FIELDS = %i[details options expires_in_minutes channel push_interests push_users agent].freeze
+    FIELDS = %i[details options expires_in_minutes channel push_interests push_users agent approvers quorum
+                callback_url].freeze
 
     # Raised when the API answers with an error (status and the API's message).
     class Error < Hibira::Error
@@ -35,8 +36,9 @@ module Hibira
     module_function
 
     # Creates an approval. options are 2 to 4 choices (the first approves);
-    # expires_in_minutes is 1 to 10080 (default 60). Returns the approval
-    # with its answer page in "url".
+    # expires_in_minutes is 1 to 10080 (default 60); approvers, quorum and
+    # callback_url are described at https://hibira.io/approvals. Returns the
+    # approval with its answer page in "url".
     def request(title:, **fields)
       raise ArgumentError, "title is required" if title.to_s.strip.empty?
 
@@ -56,6 +58,17 @@ module Hibira
       wait = wait.to_i.clamp(0, MAX_WAIT)
       query = wait.positive? ? { "wait" => wait.to_s } : {}
       call("GET", "/approvals/#{ERB::Util.url_encode(approval_id.to_s)}", query: query, read_timeout: wait + 10)
+    end
+
+    # Answers an approver's question on a pending request; details, when
+    # given, replaces the request's details for the approvers.
+    def reply(approval_id, message:, details: nil)
+      raise ArgumentError, "approval_id is required" if approval_id.to_s.empty?
+      raise ArgumentError, "message is required" if message.to_s.strip.empty?
+
+      body = { message: message.to_s }
+      body[:details] = details.to_s unless details.nil?
+      call("POST", "/approvals/#{ERB::Util.url_encode(approval_id.to_s)}/replies", body: body)
     end
 
     # Polls until the approval is no longer pending, or timeout seconds pass,
@@ -127,6 +140,11 @@ module Hibira
     # Hibira.approval("apr_…", wait: 25)
     def approval(approval_id, wait: 0)
       Approvals.get(approval_id, wait: wait)
+    end
+
+    # Hibira.reply_to_approval("apr_…", message: "Staging only; 12 rows.")
+    def reply_to_approval(approval_id, message:, details: nil)
+      Approvals.reply(approval_id, message: message, details: details)
     end
 
     # Hibira.wait_for_approval("apr_…", timeout: 600)
