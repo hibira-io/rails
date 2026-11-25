@@ -25,6 +25,7 @@ module Hibira
     initializer "hibira.helpers" do
       ActiveSupport.on_load(:action_view) do
         include Hibira::StreamsHelper
+        include Hibira::LiveChatHelper
       end
       ActiveSupport.on_load(:action_controller_base) do
         include Hibira::WaitingRoom::Controller

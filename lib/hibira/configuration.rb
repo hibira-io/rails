@@ -42,6 +42,18 @@ module Hibira
     # (Devise and most auth gems) or Current.user (the Rails 8 generator).
     attr_accessor :push_user_id
 
+    # Hibira Live Chat: the workspace ID (Live Chat › Settings › Widget) and
+    # the Verified visitors identity secret for hibira_live_chat.
+    attr_writer :livechat_workspace, :livechat_identity_secret
+
+    # The signed-in user for hibira_live_chat: receives the controller.
+    # Defaults to current_user or Current.user.
+    attr_accessor :livechat_user
+
+    # Turns that user into { id:, name:, email: } for the chat. Defaults to
+    # user.id, user.name (or first and last name) and user.email.
+    attr_accessor :livechat_describe_user
+
     # The controller the channel auth and push token endpoints inherit from,
     # for current_user and your sign-in filters. Defaults to
     # "ApplicationController".
@@ -61,6 +73,13 @@ module Hibira
       @parent_controller = "ApplicationController"
       @draw_routes = true
       @route_prefix = "hibira"
+      @livechat_user = lambda do |controller|
+        if controller.respond_to?(:current_user, true)
+          controller.send(:current_user)
+        elsif defined?(::Current) && ::Current.respond_to?(:user)
+          ::Current.user
+        end
+      end
       @push_user_id = lambda do |controller|
         user = if controller.respond_to?(:current_user, true)
                  controller.send(:current_user)
@@ -68,6 +87,11 @@ module Hibira
                  ::Current.user
                end
         user&.id
+      end
+      @livechat_describe_user = lambda do |user|
+        name = user.try(:name).presence ||
+               [user.try(:first_name), user.try(:last_name)].compact_blank.join(" ").presence
+        { id: user.try(:id), name: name, email: user.try(:email) }
       end
     end
 
@@ -80,6 +104,12 @@ module Hibira
     def use_tls
       value = setting(:@use_tls, "HIBIRA_USE_TLS", :use_tls)
       value.nil? || !%w[false 0 no off].include?(value.to_s.downcase)
+    end
+
+    def livechat_workspace = setting(:@livechat_workspace, "HIBIRA_LIVECHAT_WORKSPACE", :livechat_workspace)
+
+    def livechat_identity_secret
+      setting(:@livechat_identity_secret, "HIBIRA_LIVECHAT_IDENTITY_SECRET", :livechat_identity_secret)
     end
 
     def push_instance_id = setting(:@push_instance_id, "HIBIRA_PUSH_INSTANCE_ID", :push_instance_id)

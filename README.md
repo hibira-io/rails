@@ -231,6 +231,54 @@ anywhere else.
 
 中文摘要：在搶票或限量開賣的 controller 加上 `waiting_room "presale"`（或用 Rack middleware 保護路徑），沒有 pass 的訪客會被導到 Hibira 託管的排隊頁，輪到時帶著簽名 pass 回來並存成 HttpOnly cookie。
 
+## Live Chat
+
+Put the [Hibira Live Chat](https://chat.hibira.io) widget on every page, and
+let signed-in users chat as themselves. In your layout, before `</body>`:
+
+```erb
+<%= hibira_live_chat %>
+```
+
+Set `HIBIRA_LIVECHAT_WORKSPACE` (or `config.livechat_workspace`) to the
+workspace ID from Live Chat › Settings › Widget. With
+`HIBIRA_LIVECHAT_IDENTITY_SECRET` set too (Verified visitors, Starter plan and
+up), `current_user` (or `Current.user`) is sent with `data-user-hash`, an
+HMAC of their ID, so the inbox shows their name and email and nobody can
+pretend to be them. Options: `hibira_live_chat(color: "#0a7", lang: "ja", launcher: false, nonce: content_security_policy_nonce)`.
+`config.livechat_describe_user` changes which name and email are sent, and
+`Hibira::LiveChat.identity(user)` returns the fields for
+`HibiraLiveChat.identify()` in an SPA.
+
+中文摘要：在 layout 加 `<%= hibira_live_chat %>` 就會放上 Hibira Live Chat 聊天視窗；設定 identity secret 後，已登入的使用者會以 HMAC 簽名的身分聊天，客服看得到姓名與 email，別人也無法冒充。
+
+## Approvals
+
+Ask a person for a decision from a controller, a job or an agent
+([Hibira Approvals](https://hibira.io/approvals)), then act on the answer:
+
+```ruby
+approval = Hibira.request_approval(
+  title: "Refund order #1042 for $89?",
+  details: "Customer says the parcel arrived damaged.",
+  options: %w[Refund Decline],          # the first option approves
+  channel: "private-ops",               # optional: an "approval" event on request and decision
+  expires_in_minutes: 120
+)
+# share approval["url"] with whoever decides, then
+approval = Hibira.wait_for_approval(approval["approval_id"], timeout: 600)
+refund! if approval["status"] == "approved"
+```
+
+`Hibira.approval(id, wait: 25)` reads one status, holding the request up to
+25 seconds until it is answered. API errors raise `Hibira::Approvals::Error`
+with `status` and the API's message. When an approver asks a question
+instead of deciding (`approval["awaiting_reply"]`), answer with
+`Hibira.reply_to_approval(id, message: "...")`. `approvers:`, `quorum:` and
+`callback_url:` are passed through for Approvals workspaces.
+
+中文摘要：`Hibira.request_approval` 從 controller、背景工作或 AI agent 發出需要人決定的請求，把回傳的 `url` 分享給決策者，再用 `Hibira.wait_for_approval` 等待結果（approved、rejected 或 expired）。
+
 ## Settings
 
 | Setting | Environment | Default |
@@ -247,6 +295,8 @@ anywhere else.
 | `parent_controller` | | `"ApplicationController"` |
 | `draw_routes`, `route_prefix` | | `true`, `"hibira"` |
 | `client_options` | | `{}` (passed to `Pusher::Client.new`) |
+| `livechat_workspace`, `livechat_identity_secret` | `HIBIRA_LIVECHAT_WORKSPACE`, `HIBIRA_LIVECHAT_IDENTITY_SECRET` | |
+| `livechat_user`, `livechat_describe_user` | | `current_user` or `Current.user`; its `id`, `name` and `email` |
 
 Values set in `Hibira.configure` win over the environment, which wins over
 credentials.
