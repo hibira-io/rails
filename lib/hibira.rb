@@ -8,6 +8,7 @@ require "hibira/turbo"
 require "hibira/streams_helper"
 require "hibira/check"
 require "hibira/waiting_room"
+require "hibira/live_chat"
 
 # Rails integration for Hibira (https://hibira.io): Turbo Streams, private and
 # presence channel auth, webhooks and push notifications over the Pusher

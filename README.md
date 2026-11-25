@@ -231,6 +231,27 @@ anywhere else.
 
 中文摘要：在搶票或限量開賣的 controller 加上 `waiting_room "presale"`（或用 Rack middleware 保護路徑），沒有 pass 的訪客會被導到 Hibira 託管的排隊頁，輪到時帶著簽名 pass 回來並存成 HttpOnly cookie。
 
+## Live Chat
+
+Put the [Hibira Live Chat](https://chat.hibira.io) widget on every page, and
+let signed-in users chat as themselves. In your layout, before `</body>`:
+
+```erb
+<%= hibira_live_chat %>
+```
+
+Set `HIBIRA_LIVECHAT_WORKSPACE` (or `config.livechat_workspace`) to the
+workspace ID from Live Chat › Settings › Widget. With
+`HIBIRA_LIVECHAT_IDENTITY_SECRET` set too (Verified visitors, Starter plan and
+up), `current_user` (or `Current.user`) is sent with `data-user-hash`, an
+HMAC of their ID, so the inbox shows their name and email and nobody can
+pretend to be them. Options: `hibira_live_chat(color: "#0a7", lang: "ja", launcher: false, nonce: content_security_policy_nonce)`.
+`config.livechat_describe_user` changes which name and email are sent, and
+`Hibira::LiveChat.identity(user)` returns the fields for
+`HibiraLiveChat.identify()` in an SPA.
+
+中文摘要：在 layout 加 `<%= hibira_live_chat %>` 就會放上 Hibira Live Chat 聊天視窗；設定 identity secret 後，已登入的使用者會以 HMAC 簽名的身分聊天，客服看得到姓名與 email，別人也無法冒充。
+
 ## Settings
 
 | Setting | Environment | Default |
@@ -247,6 +268,8 @@ anywhere else.
 | `parent_controller` | | `"ApplicationController"` |
 | `draw_routes`, `route_prefix` | | `true`, `"hibira"` |
 | `client_options` | | `{}` (passed to `Pusher::Client.new`) |
+| `livechat_workspace`, `livechat_identity_secret` | `HIBIRA_LIVECHAT_WORKSPACE`, `HIBIRA_LIVECHAT_IDENTITY_SECRET` | |
+| `livechat_user`, `livechat_describe_user` | | `current_user` or `Current.user`; its `id`, `name` and `email` |
 
 Values set in `Hibira.configure` win over the environment, which wins over
 credentials.

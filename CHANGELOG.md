@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Live Chat: `<%= hibira_live_chat %>` puts the Hibira Live Chat widget on the page; with `HIBIRA_LIVECHAT_IDENTITY_SECRET` the signed-in user is a verified visitor (`data-user-hash`). `Hibira::LiveChat.identity` and `.user_hash` for SPAs.
+
 ## 0.2.0
 
 - Waiting rooms: `waiting_room "presale", only: :show` in controllers and
