@@ -106,7 +106,9 @@ module Hibira
 
       path = "/apps/#{config.app_id}#{resource}"
       json = body && JSON.generate(body)
-      qs = signed_query(method, path, query, json, key: config.key, secret: config.secret)
+      # The server checks the signature over the decoded path ("order 42", not order%2042).
+      decoded = path.gsub(/%(\h\h)/) { Regexp.last_match(1).hex.chr }.force_encoding(Encoding::UTF_8)
+      qs = signed_query(method, decoded, query, json, key: config.key, secret: config.secret)
       uri = (config.use_tls ? URI::HTTPS : URI::HTTP).build(host: config.host, port: config.port, path: path, query: qs)
       request = REQUESTS.fetch(method).new(uri)
       request["User-Agent"] = "hibira-rails/#{Hibira::VERSION}"

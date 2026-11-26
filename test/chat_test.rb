@@ -11,7 +11,9 @@ class ChatTest < ActiveSupport::TestCase
     params = URI.decode_www_form(request.uri.query).to_h
     sig = params.delete("auth_signature")
     sorted = params.sort.map { |k, v| "#{k}=#{v}" }.join("&")
-    expected = OpenSSL::HMAC.hexdigest("SHA256", "test-secret", "#{request.method.to_s.upcase}\n#{request.uri.path}\n#{sorted}")
+    # The server signs the decoded path, as Go's r.URL.Path.
+    path = URI.decode_www_form_component(request.uri.path.gsub("+", "%2B"))
+    expected = OpenSSL::HMAC.hexdigest("SHA256", "test-secret", "#{request.method.to_s.upcase}\n#{path}\n#{sorted}")
     md5_ok = request.body.to_s.empty? || params["body_md5"] == Digest::MD5.hexdigest(request.body)
     sig == expected && md5_ok
   end

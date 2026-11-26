@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fix: API requests are signed over the decoded path, as the server checks them, so IDs with a space or `/` no longer answer 401.
 - Chat API: `Hibira::Chat` (`put_conversation`, `get_conversation`, `delete_conversation`, `add_members`, `remove_member`, `send_message`, `list_messages`, `mark_read`, `system_message`, `user_conversations`, and `request` for any other route).
 
 ## 0.3.0
