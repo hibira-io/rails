@@ -95,7 +95,10 @@ module Hibira
       URI.encode_www_form(params.sort.to_h.merge("auth_signature" => signature))
     end
 
-    def call(method, resource, query: {}, body: nil, read_timeout: 15)
+    REQUESTS = { "GET" => Net::HTTP::Get, "POST" => Net::HTTP::Post, "PUT" => Net::HTTP::Put,
+                 "DELETE" => Net::HTTP::Delete }.freeze
+
+    def call(method, resource, query: {}, body: nil, read_timeout: 15, error: Error)
       config = Hibira.config
       unless config.configured?
         raise MissingCredentials, "Hibira is not configured: set #{config.missing.join(', ')}"
@@ -103,9 +106,11 @@ module Hibira
 
       path = "/apps/#{config.app_id}#{resource}"
       json = body && JSON.generate(body)
-      qs = signed_query(method, path, query, json, key: config.key, secret: config.secret)
+      # The server checks the signature over the decoded path ("order 42", not order%2042).
+      decoded = path.gsub(/%(\h\h)/) { Regexp.last_match(1).hex.chr }.force_encoding(Encoding::UTF_8)
+      qs = signed_query(method, decoded, query, json, key: config.key, secret: config.secret)
       uri = (config.use_tls ? URI::HTTPS : URI::HTTP).build(host: config.host, port: config.port, path: path, query: qs)
-      request = method == "POST" ? Net::HTTP::Post.new(uri) : Net::HTTP::Get.new(uri)
+      request = REQUESTS.fetch(method).new(uri)
       request["User-Agent"] = "hibira-rails/#{Hibira::VERSION}"
       if json
         request["Content-Type"] = "application/json"
@@ -115,19 +120,20 @@ module Hibira
                                                      open_timeout: 10, read_timeout: read_timeout) do |http|
         http.request(request)
       end
-      parse(response)
+      parse(response, error)
     end
 
-    def parse(response)
+    def parse(response, error = Error)
       data = begin
         JSON.parse(response.body.to_s)
       rescue JSON::ParserError
         nil
       end
       return data if response.is_a?(Net::HTTPSuccess) && data.is_a?(Hash)
+      return {} if response.is_a?(Net::HTTPSuccess) && response.body.to_s.strip.empty?
 
       message = data.is_a?(Hash) && data["error"] ? data["error"].to_s : response.body.to_s.strip
-      raise Error.new(response.code.to_i, message.empty? ? response.message.to_s : message, response.body)
+      raise error.new(response.code.to_i, message.empty? ? response.message.to_s : message, response.body)
     end
   end
 
