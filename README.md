@@ -279,6 +279,28 @@ instead of deciding (`approval["awaiting_reply"]`), answer with
 
 中文摘要：`Hibira.request_approval` 從 controller、背景工作或 AI agent 發出需要人決定的請求，把回傳的 `url` 分享給決策者，再用 `Hibira.wait_for_approval` 等待結果（approved、rejected 或 expired）。
 
+## Chat API
+
+Conversations with stored history, read receipts and offline push
+([Chat API](https://hibira.io/chat-api)). Users receive `chat.*` events on
+`#server-to-user-<id>` after `pusher.signin()`.
+
+```ruby
+Hibira::Chat.put_conversation("order-42", name: "Order #42", members: %w[ann support])
+Hibira::Chat.send_message("order-42", "ann", "Where is my parcel?")
+page = Hibira::Chat.list_messages("order-42", after: 0, limit: 50)
+Hibira::Chat.mark_read("order-42", "support", 12)
+Hibira::Chat.system_message("order-42", "Support joined")
+inbox = Hibira::Chat.user_conversations("ann", limit: 20)
+
+# Any other Chat API route, signed:
+Hibira::Chat.request("POST", "/conversations/order-42/typing", body: { user_id: "ann" })
+```
+
+API errors raise `Hibira::Chat::Error` with `status` and the API's message.
+
+中文摘要：`Hibira::Chat` 從 Rails 伺服器呼叫 Chat API，建立對話、送訊息、讀取歷史、標記已讀；其他路由用 `Hibira::Chat.request`。
+
 ## Settings
 
 | Setting | Environment | Default |
